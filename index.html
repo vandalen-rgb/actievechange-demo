@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Actievechange</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one phone-sized app column, role switch above it; youth view = bottom tabs + always-visible "Ik zit vast" */
+:root{
+  --bg:#efedf7; --surface:#ffffff; --surface-2:#f6f4fc; --ink:#1c2140; --muted:#666b88; --line:#dfdcec;
+  --move:#ff6b3d; --move-soft:#ffe6dc; --grow:#1f9e78; --grow-soft:#d9f3ea; --calm:#5b55d6; --calm-soft:#e6e4fb;
+  --sos:#d93a4a; --sos-soft:#fde3e6; --on-accent:#ffffff;
+  --f-display:"Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --f-body:"Figtree", "Helvetica Neue", system-ui, sans-serif;
+  --r:16px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12142a; --surface:#1c1f3a; --surface-2:#232746; --ink:#eef0ff; --muted:#a3a7c7; --line:#2f3456;
+  --move:#ff8257; --move-soft:#3a2730; --grow:#3fcf9f; --grow-soft:#173a36; --calm:#9a95ff; --calm-soft:#2a2a55;
+  --sos:#ff6b78; --sos-soft:#3d2030; --on-accent:#14162b; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#12142a; --surface:#1c1f3a; --surface-2:#232746; --ink:#eef0ff; --muted:#a3a7c7; --line:#2f3456;
+  --move:#ff8257; --move-soft:#3a2730; --grow:#3fcf9f; --grow-soft:#173a36; --calm:#9a95ff; --calm-soft:#2a2a55;
+  --sos:#ff6b78; --sos-soft:#3d2030; --on-accent:#14162b; color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45}
+.wrap{max-width:460px;margin:0 auto;padding-inline:16px;padding-block:16px 40px;display:flex;flex-direction:column;gap:12px}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:26px;font-weight:800} h2{font-size:20px;font-weight:700} h3{font-size:16px;font-weight:700}
+p{margin:0}
+.muted{color:var(--muted)} .small{font-size:13px}
+.eyebrow{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--calm);outline-offset:2px}
+input,textarea,select{font:inherit;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;width:100%}
+textarea{resize:vertical;min-height:70px}
+
+.brand{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.brand h1 span{color:var(--move)}
+.proto{font-size:12px;color:var(--muted)}
+.roles{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px}
+.roles button{padding:8px 4px;border-radius:999px;font-weight:600;font-size:13px;color:var(--muted)}
+.roles button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+
+.app{background:var(--surface);border:1px solid var(--line);border-radius:28px;overflow:hidden;display:flex;flex-direction:column;min-height:640px}
+.top{padding:18px 18px 12px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-family:var(--f-display);background:var(--calm-soft);color:var(--calm);flex:none}
+.screen{padding:4px 18px 18px;display:flex;flex-direction:column;gap:14px;flex:1}
+.sos-btn{margin:0 18px 6px;background:var(--sos);color:var(--on-accent);border-radius:var(--r);padding:12px 16px;font-family:var(--f-display);font-weight:800;font-size:17px;display:flex;align-items:center;justify-content:space-between}
+.sos-btn small{font-family:var(--f-body);font-weight:500;font-size:12px;opacity:.9}
+.tabs{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line);background:var(--surface-2);padding-bottom:env(safe-area-inset-bottom,0px)}
+.tabs button{padding:10px 2px 12px;font-size:11.5px;font-weight:600;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px;position:relative}
+.tabs button .ic{font-size:18px;line-height:1}
+.tabs button[aria-current="page"]{color:var(--ink)}
+.tabs button[aria-current="page"]::before{content:"";position:absolute;top:0;left:25%;right:25%;height:3px;border-radius:0 0 3px 3px;background:var(--move)}
+.dot{position:absolute;top:6px;right:calc(50% - 16px);min-width:16px;height:16px;border-radius:8px;background:var(--move);color:var(--on-accent);font-size:10px;display:grid;place-items:center;padding:0 4px}
+
+.card{background:var(--surface-2);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px}
+.notif{display:flex;gap:10px;align-items:flex-start;background:var(--calm-soft);border-radius:var(--r);padding:12px 14px}
+.notif.reminder{background:var(--move-soft)}
+.notif .bell{font-size:18px}
+.notif b{display:block}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 12px;font-weight:600;font-size:14px}
+.chip[aria-pressed="true"]{border-color:var(--ink);background:var(--ink);color:var(--bg)}
+.moods{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.moods button{background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:8px 2px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11.5px;font-weight:600}
+.moods button .face{width:34px;height:34px}
+.ico{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none;display:block}
+.notif .bell{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--surface);color:var(--calm);flex:none}
+.notif.reminder .bell{color:var(--move)}
+.notif .grow1{flex:1;min-width:0}
+.notif .x{padding:4px;color:var(--muted)}
+.sos-btn .lbl{display:flex;align-items:center;gap:8px}
+.tabs button .ico{width:22px;height:22px}
+.step .mark{width:18px;height:18px;flex:none;margin-top:2px;color:var(--grow)}
+.step:not(.done) .mark{color:var(--muted)}
+.moods button[aria-pressed="true"]{border-color:var(--move);background:var(--move-soft)}
+.btn{background:var(--ink);color:var(--bg);border-radius:12px;padding:11px 16px;font-weight:700;text-align:center}
+.btn.alt{background:var(--surface);color:var(--ink);border:1.5px solid var(--line)}
+.btn.move{background:var(--move);color:var(--on-accent)}
+.btn.grow{background:var(--grow);color:var(--on-accent)}
+.btn:disabled{opacity:.5;cursor:default}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row > .grow1{flex:1;min-width:0}
+.goal{background:var(--surface-2);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px}
+.goal-head{display:flex;gap:12px;align-items:center}
+.ring{width:52px;height:52px;flex:none}
+.ring text{font-family:var(--f-display);font-weight:800;font-size:13px;fill:var(--ink)}
+.meta{font-size:12.5px;color:var(--muted)}
+.step{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;background:var(--surface);border-radius:12px}
+.step input{width:20px;height:20px;flex:none;margin-top:1px;accent-color:var(--grow)}
+.step.done span{color:var(--muted);text-decoration:line-through}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--calm-soft);color:var(--calm)}
+.pill.move{background:var(--move-soft);color:var(--move)}
+.pill.grow{background:var(--grow-soft);color:var(--grow)}
+.pill.sos{background:var(--sos-soft);color:var(--sos)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{background:var(--surface-2);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:2px}
+.stat b{font-family:var(--f-display);font-size:24px;font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--muted)}
+.levels{display:flex;flex-direction:column;gap:6px}
+.lvl{display:flex;gap:10px;align-items:center;font-size:14px}
+.lvl i{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:800;background:var(--line);color:var(--muted);flex:none}
+.lvl.on i{background:var(--grow);color:var(--on-accent)}
+.lvl.now{font-weight:700}
+.bar{height:10px;background:var(--line);border-radius:5px;overflow:hidden}
+.bar > div{height:100%;background:var(--grow);border-radius:5px}
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;align-items:end;height:110px}
+.week div{display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end}
+.week span{width:100%;border-radius:6px 6px 3px 3px;background:var(--grow);min-height:3px}
+.week span.zero{background:var(--line)}
+.week small{font-size:11px;color:var(--muted)}
+
+.chat-mode{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.chat-mode button{border:1.5px solid var(--line);border-radius:14px;padding:10px;text-align:left;display:flex;flex-direction:column;gap:2px;background:var(--surface)}
+.chat-mode button b{font-family:var(--f-display)}
+.chat-mode button span{font-size:12px;color:var(--muted)}
+.chat-mode button[aria-pressed="true"]{border-color:var(--calm);background:var(--calm-soft)}
+.msgs{display:flex;flex-direction:column;gap:8px;max-height:420px;overflow-y:auto;padding:4px 2px}
+.msg{max-width:85%;padding:10px 12px;border-radius:16px;white-space:pre-wrap;overflow-wrap:anywhere}
+.msg.me{align-self:flex-end;background:var(--ink);color:var(--bg);border-bottom-right-radius:5px}
+.msg.them{align-self:flex-start;background:var(--surface-2);border-bottom-left-radius:5px}
+.msg .who{display:block;font-size:11px;font-weight:700;opacity:.7;margin-bottom:2px}
+.composer{display:flex;gap:8px}
+.composer input{flex:1;min-width:0}
+.helpline{background:var(--sos-soft);border-radius:14px;padding:12px 14px;font-size:13px;display:flex;flex-direction:column;gap:4px}
+.helpline b{color:var(--sos)}
+.helpline span{user-select:all;font-weight:700;font-variant-numeric:tabular-nums}
+.progress-dots{display:flex;gap:6px}
+.progress-dots i{flex:1;height:5px;border-radius:3px;background:var(--line)}
+.progress-dots i.on{background:var(--sos)}
+.youth-list{display:flex;flex-direction:column;gap:8px}
+.youth{display:flex;gap:12px;align-items:center;background:var(--surface-2);border-radius:var(--r);padding:12px;text-align:left;width:100%;border:1.5px solid transparent}
+.youth[aria-pressed="true"]{border-color:var(--ink)}
+.youth .info{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.subtabs{display:flex;gap:6px;overflow-x:auto}
+.subtabs button{padding:7px 12px;border-radius:999px;font-weight:600;font-size:13px;background:var(--surface-2);white-space:nowrap}
+.subtabs button[aria-current="page"]{background:var(--ink);color:var(--bg)}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:13px;font-weight:600}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:600;font-size:14px;max-width:calc(100% - 32px);z-index:5}
+.challenge{display:flex;gap:10px;align-items:flex-start;background:var(--surface-2);border-radius:14px;padding:12px}
+.challenge .grow1{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.rate{display:flex;gap:6px;flex-wrap:wrap}
+.rate button{font-size:12.5px;padding:5px 10px;border-radius:999px;background:var(--surface);border:1.5px solid var(--line);font-weight:600}
+.share{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.share input{width:22px;height:22px;accent-color:var(--grow);flex:none}
+.foot{font-size:12.5px;color:var(--muted);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.foot button{text-decoration:underline;color:var(--muted);font-size:12.5px}
+@media (prefers-reduced-motion: no-preference){.toast{animation:pop .25s ease-out}@keyframes pop{from{opacity:0;transform:translate(-50%,8px)}}}
+</style>
+</head>
+<body style="margin:0">
+
+<div class="wrap">
+  <div class="brand">
+    <h1>Actie<span>ve</span>change</h1>
+    <span class="proto">Prototype · voorbeelddata</span>
+  </div>
+  <p class="small muted">Van vastlopen naar in beweging komen. Wissel hieronder van rol om te zien wat de jongere, de begeleider en de ouder zien.</p>
+  <div class="roles" role="group" aria-label="Bekijk als">
+    <button data-act="role" data-v="jongere">Jongere</button>
+    <button data-act="role" data-v="begeleider">Begeleider</button>
+    <button data-act="role" data-v="ouder">Ouder</button>
+  </div>
+  <div class="app" id="app"></div>
+  <div class="foot"><span>Meldingen en herinneringen worden hier in de app getoond; in de echte app worden het pushberichten.</span><button data-act="reset">Demo opnieuw beginnen</button></div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const KEY = "actievechange-demo-v1";
+const DAYS = ["ma","di","wo","do","vr","za","zo"];
+const LEVELS = [["Start",0],["In beweging",60],["Groei",150],["Sterker",300],["Actievechange",500]];
+const HELP = `<div class="helpline"><b>Ben je in gevaar of denk je aan zelfdoding?</b>
+<div>Bel <span>112</span> bij direct gevaar · 113 Zelfmoordpreventie: <span>0800-0113</span> (gratis, 24/7)</div>
+<div>De Kindertelefoon (t/m 18 jaar): <span>0800-0432</span></div></div>`;
+
+function seed(){
+  return {
+    role:"jongere", tab:"home", btab:"overzicht", sel:"sem", chatMode:"coach",
+    youth:[
+      {id:"sem", name:"Sem", age:16, mood:null, lastMood:"Gaat wel", signal:null},
+      {id:"noor", name:"Noor", age:14, lastMood:"Niet zo goed", signal:"Ik zit vast: school (gisteren)"},
+      {id:"daan", name:"Daan", age:19, lastMood:"Goed", signal:null}
+    ],
+    points:{sem:95, noor:40, daan:210},
+    week:{sem:[2,1,3,0,2,0,0], noor:[1,0,1,0,0,0,0], daan:[3,2,2,4,1,0,0]},
+    goals:[
+      {id:"g1", youth:"sem", title:"Ik wil meer zelfvertrouwen", why:"Uit ons gesprek van dinsdag: je durft niet te solliciteren bij de bakker.", freq:"3x per week", by:"Britney",
+       steps:[{t:"Schrijf 3 dingen op waar je goed in bent",d:true},{t:"Geef iemand een compliment",d:true},{t:"Loop langs de bakker en vraag of ze iemand zoeken",d:false},{t:"Vertel Britney hoe het ging",d:false}]},
+      {id:"g2", youth:"sem", title:"Rustiger worden als het thuis botst", why:"Je zei: ik krop het op en dan ontplof ik.", freq:"dagelijks", by:"Britney",
+       steps:[{t:"Merk 1 keer op wanneer je boos wordt en schrijf het op",d:true},{t:"10 minuten naar buiten zonder telefoon als het botst",d:false},{t:"Eén ding tegen je moeder zeggen in een rustig moment",d:false}]},
+      {id:"g3", youth:"noor", title:"Elke ochtend op tijd op school", why:"Samen afgesproken na het gesprek met de mentor.", freq:"dagelijks", by:"Britney",
+       steps:[{t:"Wekker om 7:00 en telefoon buiten je kamer",d:false},{t:"Tas de avond ervoor inpakken",d:true}]}
+    ],
+    challenges:[
+      {id:"c1", theme:"Zelfvertrouwen", t:"Geef vandaag iemand een compliment.", done:true, rate:"Goed"},
+      {id:"c2", theme:"Sociaal", t:"Begin vandaag zelf een gesprek met iemand.", done:false},
+      {id:"c3", theme:"Grenzen", t:"Zeg vandaag één keer duidelijk wat jij wel of niet wilt.", done:false},
+      {id:"c4", theme:"Stress", t:"Neem 10 minuten zonder telefoon en doe iets actiefs.", done:false},
+      {id:"c5", theme:"Motivatie", t:"Doe 5 minuten iets waar je tegenop ziet.", done:false},
+      {id:"c6", theme:"Toekomst", t:"Zoek één bijbaan of opleiding op die je leuk lijkt.", done:false}
+    ],
+    chats:{
+      coach:[{from:"them", who:"Chatcoach", t:"Hoi Sem. Ik ben de chatcoach van Actievechange. Je kunt me altijd iets vragen, ook 's avonds. Als je liever met Britney praat, kan dat ook. Waar zit je mee?"}],
+      sem:[{from:"britney", t:"Hey Sem! Ik heb je doel voor deze week klaargezet. Laat je weten hoe het bij de bakker ging?"},{from:"youth", t:"ja ga ik doen. vind het wel eng"},{from:"britney", t:"Snap ik helemaal. Je hoeft niet meteen te solliciteren, alleen even vragen. Je kan dit!"}],
+      noor:[{from:"youth", t:"ik ben weer te laat gekomen en de mentor was boos"}],
+      daan:[{from:"britney", t:"Hoe ging je gesprek bij het uitzendbureau?"},{from:"youth", t:"Goed! Volgende week mag ik beginnen"}]
+    },
+    stuck:[{youth:"noor", where:"School", what:"Ik kom steeds te laat en krijg straf", feel:"Boos", need:"Een plan", when:"gisteren 21:40", handled:false}],
+    notifs:[{youth:"sem", t:"Britney heeft een nieuw doel voor je klaargezet: Rustiger worden als het thuis botst", read:false}],
+    share:{sem:{goals:true, checkins:true, stuck:false}},
+    parentWeek:{acts:3}
+  };
+}
+let S;
+try{ S = JSON.parse(localStorage.getItem(KEY)) || seed(); }catch(e){ S = seed(); }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+const $app = document.getElementById("app");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const Y = id => S.youth.find(y => y.id === id);
+const ICONS = {
+  home:'<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/>',
+  target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/>',
+  flag:'<path d="M5 21V4"/><path d="M5 4h12l-2.5 4.5L17 13H5"/>',
+  growth:'<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
+  chat:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>',
+  bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  alert:'<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+  close:'<path d="M18 6 6 18M6 6l12 12"/>',
+  check:'<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',
+  open:'<circle cx="12" cy="12" r="9"/>',
+  buoy:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="m4.9 4.9 4.3 4.3M14.8 14.8l4.3 4.3M14.8 9.2l4.3-4.3M4.9 19.1l4.3-4.3"/>',
+  arrow:'<path d="M5 12h14M13 6l6 6-6 6"/>'
+};
+const icon = (n, cls="") => `<svg class="ico ${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n]}</svg>`;
+const FACES = {
+  "Goed":        {c:"var(--grow)", bg:"var(--grow-soft)", m:'<path d="M13 22.5q7 7 14 0"/>'},
+  "Gaat wel":    {c:"var(--calm)", bg:"var(--calm-soft)", m:'<path d="M14 24q6 3.5 12 0"/>'},
+  "Niet zo goed":{c:"var(--muted)", bg:"var(--line)", m:'<path d="M14 26.5q6-3.5 12 0"/>'},
+  "Boos":        {c:"var(--sos)", bg:"var(--sos-soft)", m:'<path d="M14 27q6-5 12 0"/><path d="M12 13.5l5 2.5M28 13.5l-5 2.5"/>'},
+  "Gestrest":    {c:"var(--move)", bg:"var(--move-soft)", m:'<path d="M12.5 26q1.9-2.4 3.8 0t3.8 0 3.8 0 3.8 0"/>'}
+};
+function face(l){ const f=FACES[l];
+  return `<svg class="face" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="18" fill="${f.bg}"/>
+  <g fill="none" stroke="${f.c}" stroke-width="2.4" stroke-linecap="round"><circle cx="15" cy="17.5" r="1.4" fill="${f.c}"/><circle cx="25" cy="17.5" r="1.4" fill="${f.c}"/>${f.m}</g></svg>`; }
+function toast(t){ const el=document.getElementById("toast"); el.textContent=t; el.hidden=false; clearTimeout(toast.h); toast.h=setTimeout(()=>el.hidden=true,2600); }
+function addPoints(id,n){ S.points[id]=(S.points[id]||0)+n; const d=todayIdx(); S.week[id][d]=(S.week[id][d]||0)+1; }
+function todayIdx(){ return (new Date().getDay()+6)%7; }
+function level(p){ let i=0; LEVELS.forEach((l,k)=>{ if(p>=l[1]) i=k; }); return i; }
+function pct(g){ return g.steps.length ? Math.round(100*g.steps.filter(s=>s.d).length/g.steps.length) : 0; }
+function ring(p){
+  const r=22, c=2*Math.PI*r;
+  return `<svg class="ring" viewBox="0 0 52 52" aria-label="${p}% gedaan"><circle cx="26" cy="26" r="${r}" fill="none" stroke="var(--line)" stroke-width="6"/>
+  <circle cx="26" cy="26" r="${r}" fill="none" stroke="var(--grow)" stroke-width="6" stroke-linecap="round" stroke-dasharray="${c*p/100} ${c}" transform="rotate(-90 26 26)"/>
+  <text x="26" y="30" text-anchor="middle">${p}%</text></svg>`;
+}
+function now(){ const d=new Date(); return d.toLocaleTimeString("nl-NL",{hour:"2-digit",minute:"2-digit"}); }
+
+/* ---------- Jongere ---------- */
+const ME = "sem";
+function youthApp(){
+  const unread = S.notifs.filter(n=>n.youth===ME && !n.read).length;
+  const tabs=[["home","home","Home"],["doelen","target","Mijn doelen"],["challenges","flag","Challenges"],["groei","growth","Mijn groei"],["chat","chat","Chat"]];
+  let body = "";
+  if(S.tab==="vast") body = stuckFlow();
+  else body = ({home:youthHome, doelen:youthGoals, challenges:youthChallenges, groei:youthGrowth, chat:youthChat})[S.tab]();
+  return `<div class="top"><div><div class="eyebrow">Hoi Sem · 16 jaar</div><h2>${({home:"Hoe gaat het vandaag?",doelen:"Mijn doelen",challenges:"Challenges",groei:"Mijn groei",chat:"Chat",vast:"Ik zit vast"})[S.tab]}</h2></div><div class="avatar">S</div></div>
+  ${S.tab!=="vast" ? `<button class="sos-btn" data-act="vast"><span class="lbl">${icon("buoy")}Ik zit vast</span><small class="lbl">Hulp in 4 korte vragen ${icon("arrow")}</small></button>` : ""}
+  <div class="screen">${body}</div>
+  <nav class="tabs">${tabs.map(([k,ic,l])=>`<button data-act="tab" data-v="${k}" ${S.tab===k?'aria-current="page"':''}>${icon(ic)}${l}${k==="home"&&unread?`<i class="dot">${unread}</i>`:""}</button>`).join("")}</nav>`;
+}
+function youthHome(){
+  const me=Y(ME);
+  const notifs=S.notifs.filter(n=>n.youth===ME && !n.read);
+  const g=S.goals.filter(g=>g.youth===ME);
+  const next=g.map(x=>({g:x,s:x.steps.find(s=>!s.d)})).find(x=>x.s);
+  const moods=["Goed","Gaat wel","Niet zo goed","Boos","Gestrest"];
+  const topics=["Mijn gedachten","Mijn gevoelens","Zelfvertrouwen","Vrienden","School","Thuis","Relatie","Boosheid","Stress","Motivatie","Werk / solliciteren","Iets anders"];
+  return `
+  ${notifs.map((n,i)=>`<div class="notif"><span class="bell">${icon("bell")}</span><div class="grow1"><b>Nieuw van Britney</b><span class="small">${esc(n.t)}</span></div><button class="x" data-act="readnotif" data-v="${S.notifs.indexOf(n)}" aria-label="Gelezen">${icon("close")}</button></div>`).join("")}
+  ${next?`<div class="notif reminder"><span class="bell">${icon("clock")}</span><div class="grow1"><b>Herinnering (${esc(next.g.freq)})</b><span class="small">Vandaag een kleine stap voor "${esc(next.g.title)}": ${esc(next.s.t)}</span></div></div>`:""}
+  <div class="card"><h3>Hoe gaat het vandaag?</h3>
+    <div class="moods">${moods.map(l=>`<button data-act="mood" data-v="${l}" aria-pressed="${me.mood===l}">${face(l)}${l}</button>`).join("")}</div>
+    ${me.mood?`<p class="small muted">${me.mood==="Goed"||me.mood==="Gaat wel"?"Fijn dat je het even laat weten. Je check-in telt mee voor je groei.":"Dank je dat je het laat weten. Wil je erover praten? De chatcoach is er nu, of stuur Britney een bericht."}</p>`:""}
+  </div>
+  <div class="card"><h3>Waar wil je vandaag mee aan de slag?</h3>
+    <div class="chips">${topics.map(t=>`<button class="chip" data-act="topic" data-v="${t}" aria-pressed="${S.topic===t}">${t}</button>`).join("")}</div>
+    ${S.topic?`<button class="btn" data-act="topicchat">Praat hierover met de chatcoach</button>`:""}
+  </div>
+  ${next?`<div class="card"><div class="eyebrow">Jouw stap van vandaag</div><h3>${esc(next.s.t)}</h3><p class="small muted">Hoort bij: ${esc(next.g.title)}</p><button class="btn grow" data-act="step" data-g="${next.g.id}" data-s="${next.g.steps.indexOf(next.s)}">Gedaan!</button></div>`:""}`;
+}
+function youthGoals(){
+  const g=S.goals.filter(g=>g.youth===ME);
+  return `<p class="small muted">Deze doelen heb je samen met Britney gemaakt. Elke stap is klein. Vink af wat je gedaan hebt.</p>
+  ${g.map(goal=>`<div class="goal"><div class="goal-head">${ring(pct(goal))}<div class="grow1"><h3>${esc(goal.title)}</h3><div class="meta">Van ${esc(goal.by)} · herinnering ${esc(goal.freq)}</div></div></div>
+    ${goal.why?`<p class="small muted">${esc(goal.why)}</p>`:""}
+    ${goal.steps.map((s,i)=>`<label class="step ${s.d?"done":""}"><input type="checkbox" data-act="step" data-g="${goal.id}" data-s="${i}" ${s.d?"checked":""}><span>${esc(s.t)}</span></label>`).join("")}
+  </div>`).join("") || `<div class="card"><p>Nog geen doelen. Britney zet ze voor je klaar na jullie gesprek.</p></div>`}`;
+}
+function youthChallenges(){
+  return `<p class="small muted">Niet alleen praten over het probleem, maar iets doen. Kies er één voor vandaag.</p>
+  ${S.challenges.map(c=>`<div class="challenge"><div class="grow1"><span class="pill ${c.done?"grow":"move"}">${esc(c.theme)}</span><b>${esc(c.t)}</b>
+    ${c.done?`<span class="small muted">Gedaan${c.rate?` · ging: ${esc(c.rate)}`:""}</span>`:
+      (S.rating===c.id?`<span class="small">Hoe ging het?</span><div class="rate">${["Moeilijk","Ging wel","Goed","Super"].map(r=>`<button data-act="rate" data-c="${c.id}" data-v="${r}">${r}</button>`).join("")}</div>`:
+      `<button class="btn alt" style="align-self:flex-start;padding:7px 12px" data-act="cdone" data-v="${c.id}">Ik heb het gedaan</button>`)}
+  </div></div>`).join("")}`;
+}
+function youthGrowth(){
+  const p=S.points[ME]||0, li=level(p), nextL=LEVELS[li+1];
+  const w=S.week[ME], max=Math.max(4,...w);
+  const done=S.challenges.filter(c=>c.done).length;
+  const steps=S.goals.filter(g=>g.youth===ME).reduce((a,g)=>a+g.steps.filter(s=>s.d).length,0);
+  const actDays=w.filter(x=>x>0).length;
+  const sh=S.share[ME];
+  return `<div class="stats"><div class="stat"><b>${actDays}</b><span>dagen actief</span></div><div class="stat"><b>${steps}</b><span>stappen gezet</span></div><div class="stat"><b>${done}</b><span>challenges</span></div></div>
+  <div class="card"><div class="row"><h3 class="grow1">Level ${li+1}: ${LEVELS[li][0]}</h3><span class="pill grow">${p} punten</span></div>
+    ${nextL?`<div class="bar"><div style="width:${Math.min(100,100*(p-LEVELS[li][1])/(nextL[1]-LEVELS[li][1]))}%"></div></div><p class="small muted">Nog ${nextL[1]-p} punten tot "${nextL[0]}"</p>`:""}
+    <div class="levels">${LEVELS.map((l,i)=>`<div class="lvl ${i<=li?"on":""} ${i===li?"now":""}"><i>${i+1}</i>${l[0]}</div>`).join("")}</div>
+  </div>
+  <div class="card"><h3>Deze week</h3>
+    <div class="week">${w.map((v,i)=>`<div><span class="${v?"":"zero"}" style="height:${v?Math.max(8,80*v/max):3}px"></span><small>${DAYS[i]}</small></div>`).join("")}</div>
+    <p class="small muted">Het gaat niet om wie de beste is, maar om jouw eigen stappen.</p>
+  </div>
+  <div class="card"><h3>Dit wil ik delen met mijn ouder</h3>
+    <p class="small muted">Je ouder ziet nooit je chats of wat je bij "Ik zit vast" invult, tenzij jij dat hier aanzet.</p>
+    ${[["goals","Mijn doelen en voortgang"],["checkins","Hoe het met me gaat (check-ins)"],["stuck","Dat ik vastzat (zonder details)"]].map(([k,l])=>`<label class="share"><span>${l}</span><input type="checkbox" data-act="share" data-v="${k}" ${sh[k]?"checked":""}></label>`).join("")}
+  </div>`;
+}
+function youthChat(){
+  const m=S.chatMode, list = m==="coach" ? S.chats.coach : S.chats[ME];
+  return `<div class="chat-mode"><button data-act="mode" data-v="coach" aria-pressed="${m==="coach"}"><b>Chatcoach</b><span>Direct antwoord, dag en nacht</span></button><button data-act="mode" data-v="britney" aria-pressed="${m==="britney"}"><b>Britney</b><span>Persoonlijk, ze reageert zo snel ze kan</span></button></div>
+  <div class="msgs" id="msgs">${list.map(x=>{ const mine = m==="coach" ? x.from==="me" : x.from==="youth";
+    return `<div class="msg ${mine?"me":"them"}">${!mine?`<span class="who">${m==="coach"?"Chatcoach":"Britney"}</span>`:""}${esc(x.t)}</div>`;}).join("")}
+    ${S.thinking&&m==="coach"?`<div class="msg them"><span class="who">Chatcoach</span><span id="stream">Even nadenken...</span></div>`:""}
+  </div>
+  <form class="composer" data-form="chat"><input id="chatin" autocomplete="off" placeholder="${m==="coach"?"Vraag de chatcoach iets...":"Stuur Britney een bericht..."}"><button class="btn" ${S.thinking?"disabled":""}>Stuur</button></form>
+  ${m==="coach"&&S.chats.coach.length>2?`<button class="btn alt" data-act="handoff">Bespreek dit verder met Britney</button>`:""}
+  ${m==="coach"?`<p class="small muted">De chatcoach is een AI. Hij geeft geen diagnose en vervangt Britney niet.</p>`:""}`;
+}
+function stuckFlow(){
+  const f=S.flow||(S.flow={step:0});
+  const dots=`<div class="progress-dots">${[0,1,2,3,4].map(i=>`<i class="${i<=f.step?"on":""}"></i>`).join("")}</div>`;
+  const chipQ=(key,q,opts)=>`<h3>${q}</h3><div class="chips">${opts.map(o=>`<button class="chip" data-act="flow" data-k="${key}" data-v="${o}" aria-pressed="${f[key]===o}">${o}</button>`).join("")}</div>`;
+  let inner="";
+  if(f.step===0) inner=chipQ("where","Waar zit je vast?",["Thuis","School","Vrienden","Relatie","Emoties","Motivatie","Werk","Toekomst","Anders"]);
+  if(f.step===1) inner=`<h3>Wat gebeurt er?</h3><textarea id="flowwhat" placeholder="Schrijf het op zoals het in je hoofd zit. Hoeft niet netjes.">${esc(f.what||"")}</textarea><button class="btn" data-act="flownext">Verder</button>`;
+  if(f.step===2) inner=chipQ("feel","Wat voel je?",["Boos","Verdrietig","Bang","Onrustig","Leeg","Ik weet het niet"]);
+  if(f.step===3) inner=chipQ("need","Wat heb je nodig?",["Even rust","Iemand die luistert","Een plan","Hulp van Britney"]);
+  if(f.step===4){
+    const tips={"Even rust":"Ga 10 minuten naar buiten of zet muziek op. Daarna kijk je opnieuw.","Iemand die luistert":"Vertel het aan de chatcoach of aan Britney. Je hoeft het niet zelf op te lossen.","Een plan":"Schrijf één ding op dat je vandaag kunt doen. Hoe kleiner, hoe beter.","Hulp van Britney":"Stuur het naar Britney. Ze ziet wat je hebt ingevuld en neemt contact op."};
+    inner=`<div class="card"><div class="eyebrow">Je zit vast bij: ${esc(f.where)}</div><p>Je voelt je <b>${esc((f.feel||"").toLowerCase())}</b> en je hebt <b>${esc((f.need||"").toLowerCase())}</b> nodig. Dat is helemaal oké.</p></div>
+    <div class="card"><h3>Wat kun je vandaag doen?</h3><p>${tips[f.need]}</p></div>
+    <button class="btn move" data-act="flowsend">Stuur naar Britney</button>
+    <button class="btn alt" data-act="flowcoach">Praat er nu over met de chatcoach</button>`;
+  }
+  return `${dots}${inner}<button class="small muted" style="align-self:flex-start;text-decoration:underline" data-act="flowclose">Terug naar home</button>${HELP}`;
+}
+
+/* ---------- Begeleider ---------- */
+function coachApp(){
+  const open=S.stuck.filter(s=>!s.handled).length;
+  const subs=[["overzicht","Overzicht"],["doelen","Doelen"],["chats","Chats"],["meldingen",`Ik zit vast${open?` (${open})`:""}`]];
+  const y=Y(S.sel);
+  const body=({overzicht:coachOverview,doelen:coachGoals,chats:coachChats,meldingen:coachStuck})[S.btab]();
+  return `<div class="top"><div><div class="eyebrow">Begeleidersomgeving</div><h2>Hoi Britney</h2></div><div class="avatar" style="background:var(--move-soft);color:var(--move)">B</div></div>
+  <div class="screen"><div class="subtabs">${subs.map(([k,l])=>`<button data-act="btab" data-v="${k}" ${S.btab===k?'aria-current="page"':''}>${l}</button>`).join("")}</div>
+  ${S.btab!=="overzicht"&&S.btab!=="meldingen"?`<div class="subtabs">${S.youth.map(x=>`<button data-act="sel" data-v="${x.id}" ${S.sel===x.id?'aria-current="page"':''}>${x.name} (${x.age})</button>`).join("")}</div>`:""}
+  ${body}</div>`;
+}
+function coachOverview(){
+  return `<div class="youth-list">${S.youth.map(y=>{
+    const g=S.goals.filter(g=>g.youth===y.id), act=S.week[y.id].filter(v=>v>0).length;
+    const stuck=S.stuck.find(s=>s.youth===y.id&&!s.handled);
+    return `<button class="youth" data-act="open" data-v="${y.id}"><div class="avatar">${y.name[0]}</div><div class="info"><b>${y.name}, ${y.age} jaar</b>
+      <span class="small muted">${g.length} doel${g.length===1?"":"en"} · ${act} dagen actief deze week · laatste check-in: ${esc(y.mood||y.lastMood)}</span>
+      <div class="row">${stuck?`<span class="pill sos">Zit vast: ${esc(stuck.where)}</span>`:""}${act<2?`<span class="pill move">Weinig actief</span>`:`<span class="pill grow">Op koers</span>`}</div></div></button>`;}).join("")}</div>
+  <p class="small muted">Jongeren zien alleen hun eigen omgeving. Ouders zien alleen wat de jongere deelt.</p>`;
+}
+function coachGoals(){
+  const y=Y(S.sel), g=S.goals.filter(g=>g.youth===y.id), d=S.draft||(S.draft={});
+  return `${g.map(goal=>`<div class="goal"><div class="goal-head">${ring(pct(goal))}<div class="grow1"><h3>${esc(goal.title)}</h3><div class="meta">Herinnering ${esc(goal.freq)} · ${goal.steps.filter(s=>s.d).length}/${goal.steps.length} stappen</div></div></div>
+    ${goal.steps.map(s=>`<div class="step ${s.d?"done":""}">${icon(s.d?"check":"open","mark")}<span>${esc(s.t)}</span></div>`).join("")}</div>`).join("")}
+  <div class="card"><h3>Nieuw doel voor ${y.name}</h3>
+    <div class="field"><label for="gtitle">Doel (in de woorden van ${y.name})</label><input id="gtitle" value="${esc(d.title||"")}" placeholder="Bijv. Ik wil meer structuur in mijn week"></div>
+    <div class="field"><label for="gwhy">Uit het gesprek</label><textarea id="gwhy" placeholder="Wat jullie samen besproken hebben">${esc(d.why||"")}</textarea></div>
+    <div class="field"><label for="gsteps">Kleine stappen (één per regel)</label><textarea id="gsteps" style="min-height:110px" placeholder="Dag 1: ...">${esc(d.steps||"")}</textarea></div>
+    <button class="btn alt" data-act="aisteps" ${S.aiBusy?"disabled":""}>${S.aiBusy?"Stappen worden bedacht...":"Laat AI kleine stappen voorstellen"}</button>
+    <div class="field"><label for="gfreq">Herinnering sturen</label><select id="gfreq">${["dagelijks","3x per week","wekelijks"].map(f=>`<option ${d.freq===f?"selected":""}>${f}</option>`).join("")}</select></div>
+    <button class="btn move" data-act="savegoal">Doel klaarzetten en ${y.name} een melding sturen</button>
+  </div>`;
+}
+function coachChats(){
+  const y=Y(S.sel), list=S.chats[y.id]||[];
+  return `<div class="msgs" id="msgs">${list.map(x=>`<div class="msg ${x.from==="britney"?"me":"them"}">${x.from!=="britney"?`<span class="who">${y.name}</span>`:""}${esc(x.t)}</div>`).join("") || `<p class="muted small">Nog geen berichten met ${y.name}.</p>`}</div>
+  <form class="composer" data-form="coachchat"><input id="coachin" autocomplete="off" placeholder="Bericht aan ${y.name}..."><button class="btn">Stuur</button></form>
+  <p class="small muted">Tip: zet iets uit dit gesprek direct om in een doel via het tabblad Doelen.</p>`;
+}
+function coachStuck(){
+  const list=S.stuck.slice().reverse();
+  return list.map((s,i)=>{ const y=Y(s.youth), idx=S.stuck.indexOf(s);
+    return `<div class="card"><div class="row"><b class="grow1">${y.name} zit vast: ${esc(s.where)}</b><span class="pill ${s.handled?"grow":"sos"}">${s.handled?"Opgepakt":"Nieuw"}</span></div>
+    ${s.what?`<p>"${esc(s.what)}"</p>`:""}<p class="small muted">Voelt zich ${esc((s.feel||"").toLowerCase())} · heeft nodig: ${esc((s.need||"").toLowerCase())} · ${esc(s.when)}</p>
+    ${s.handled?"":`<div class="row"><button class="btn" data-act="stuckchat" data-v="${idx}">Stuur ${y.name} een bericht</button><button class="btn alt" data-act="stuckdone" data-v="${idx}">Opgepakt</button></div>`}</div>`;}).join("") || `<p class="muted">Geen meldingen.</p>`;
+}
+
+/* ---------- Ouder ---------- */
+function parentApp(){
+  const sh=S.share[ME], y=Y(ME), g=S.goals.filter(g=>g.youth===ME), act=S.week[ME].filter(v=>v>0).length;
+  const steps=g.reduce((a,x)=>a+x.steps.filter(s=>s.d).length,0);
+  return `<div class="top"><div><div class="eyebrow">Ouderomgeving</div><h2>Hoe gaat het met Sem?</h2></div><div class="avatar" style="background:var(--grow-soft);color:var(--grow)">O</div></div>
+  <div class="screen">
+  <div class="stats"><div class="stat"><b>${act}</b><span>dagen actief</span></div><div class="stat"><b>${g.length}</b><span>doelen actief</span></div><div class="stat"><b>${steps}</b><span>stappen gezet</span></div></div>
+  ${sh.checkins?`<div class="card"><div class="eyebrow">Laatste check-in</div><h3>${esc(y.mood||y.lastMood)}</h3></div>`:""}
+  ${sh.goals?g.map(x=>`<div class="goal"><div class="goal-head">${ring(pct(x))}<div><h3>${esc(x.title)}</h3><div class="meta">${x.steps.filter(s=>s.d).length} van ${x.steps.length} stappen</div></div></div></div>`).join(""):`<div class="card"><p class="muted">Sem deelt zijn doelen nu niet met jou.</p></div>`}
+  ${sh.stuck&&S.stuck.some(s=>s.youth===ME)?`<div class="notif reminder"><span class="bell">${icon("alert")}</span><div class="grow1"><b>Sem zat deze week ergens mee</b><span class="small">Britney weet ervan en heeft contact.</span></div></div>`:""}
+  <div class="card"><div class="eyebrow">Tip van Britney deze week</div><h3>Vraag niet "hoe was school?", maar "wat was vandaag het leukste?"</h3><p class="small muted">Open vragen zonder oordeel maken het makkelijker om te praten. Luister eerst, geef pas daarna advies.</p></div>
+  <div class="card"><h3>Privacy</h3><p class="small muted">Je krijgt geen toegang tot chats, dagboek of de antwoorden bij "Ik zit vast". Sem kiest zelf wat hij met jou deelt.</p></div>
+  </div>`;
+}
+
+/* ---------- Render + events ---------- */
+function render(){
+  document.querySelectorAll(".roles button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.v===S.role));
+  $app.innerHTML = S.role==="jongere" ? youthApp() : S.role==="begeleider" ? coachApp() : parentApp();
+  const m=document.getElementById("msgs"); if(m) m.scrollTop=m.scrollHeight;
+  save();
+}
+function keepDraft(){ const t=document.getElementById("gtitle"); if(t) S.draft={title:t.value, why:gwhy.value, steps:gsteps.value, freq:gfreq.value}; }
+
+document.addEventListener("click", e=>{
+  const b=e.target.closest("[data-act]"); if(!b) return;
+  const a=b.dataset.act, v=b.dataset.v;
+  if(b.tagName==="INPUT") return; // checkboxes handled on change
+  keepDraft();
+  if(a==="role"){ S.role=v; }
+  else if(a==="tab"){ S.tab=v; }
+  else if(a==="btab"){ S.btab=v; }
+  else if(a==="sel"){ S.sel=v; S.draft={}; }
+  else if(a==="open"){ S.sel=v; S.btab="doelen"; S.draft={}; }
+  else if(a==="reset"){ S=seed(); toast("Demo staat weer op de beginstand"); }
+  else if(a==="readnotif"){ S.notifs[+v].read=true; }
+  else if(a==="mood"){ const y=Y(ME); if(!y.mood) addPoints(ME,5); y.mood=v; }
+  else if(a==="topic"){ S.topic = S.topic===v?null:v; }
+  else if(a==="topicchat"){ S.tab="chat"; S.chatMode="coach"; render(); askCoach(`Ik wil het hebben over: ${S.topic}`); return; }
+  else if(a==="step"){ toggleStep(b.dataset.g,+b.dataset.s); }
+  else if(a==="cdone"){ S.rating=v; }
+  else if(a==="rate"){ const c=S.challenges.find(c=>c.id===b.dataset.c); c.done=true; c.rate=v; S.rating=null; addPoints(ME,15); toast("Challenge gedaan: +15 punten"); }
+  else if(a==="mode"){ S.chatMode=v; }
+  else if(a==="handoff"){ const last=S.chats.coach.filter(x=>x.from==="me").slice(-2).map(x=>x.t).join(" / ");
+    S.chats[ME].push({from:"youth", t:`(Doorgestuurd vanuit de chatcoach) ${last}`}); S.chatMode="britney"; toast("Britney ziet je vraag nu in haar chats"); }
+  else if(a==="vast"){ S.flow={step:0}; S.tab="vast"; }
+  else if(a==="flow"){ S.flow[b.dataset.k]=v; S.flow.step++; }
+  else if(a==="flownext"){ S.flow.what=document.getElementById("flowwhat").value; S.flow.step++; }
+  else if(a==="flowclose"){ S.tab="home"; S.flow=null; }
+  else if(a==="flowsend"){ const f=S.flow; S.stuck.push({youth:ME, where:f.where, what:f.what, feel:f.feel, need:f.need, when:"vandaag "+now(), handled:false});
+    addPoints(ME,5); S.tab="home"; S.flow=null; toast("Verstuurd. Britney krijgt een melding."); }
+  else if(a==="flowcoach"){ const f=S.flow; S.tab="chat"; S.chatMode="coach"; S.flow=null; render();
+    askCoach(`Ik zit vast bij: ${f.where}. ${f.what?`Wat er gebeurt: ${f.what}. `:""}Ik voel me ${(f.feel||"").toLowerCase()} en ik heb ${(f.need||"").toLowerCase()} nodig.`); return; }
+  else if(a==="savegoal"){ const d=S.draft; if(!d.title?.trim()){ toast("Vul eerst het doel in"); return; }
+    const y=Y(S.sel); S.goals.push({id:"g"+Date.now(), youth:y.id, title:d.title.trim(), why:d.why, freq:d.freq||"dagelijks", by:"Britney",
+      steps:(d.steps||"").split("\n").map(s=>s.trim()).filter(Boolean).map(t=>({t,d:false}))});
+    S.notifs.push({youth:y.id, t:`Britney heeft een nieuw doel voor je klaargezet: ${d.title.trim()}`, read:false});
+    S.draft={}; toast(`${y.name} krijgt een melding en ${d.freq||"dagelijks"} een herinnering`); }
+  else if(a==="aisteps"){ aiSteps(); return; }
+  else if(a==="stuckdone"){ S.stuck[+v].handled=true; }
+  else if(a==="stuckchat"){ const s=S.stuck[+v]; S.sel=s.youth; S.btab="chats"; s.handled=true; }
+  render();
+});
+document.addEventListener("change", e=>{
+  const b=e.target.closest("input[data-act]"); if(!b) return;
+  if(b.dataset.act==="step") toggleStep(b.dataset.g,+b.dataset.s);
+  if(b.dataset.act==="share") S.share[ME][b.dataset.v]=b.checked;
+  render();
+});
+document.addEventListener("submit", e=>{
+  e.preventDefault(); const f=e.target.dataset.form;
+  if(f==="chat"){ const i=document.getElementById("chatin"), t=i.value.trim(); if(!t) return;
+    if(S.chatMode==="coach"){ askCoach(t); }
+    else { S.chats[ME].push({from:"youth", t}); render(); toast("Britney krijgt een melding"); } }
+  if(f==="coachchat"){ const i=document.getElementById("coachin"), t=i.value.trim(); if(!t) return;
+    const y=Y(S.sel); (S.chats[y.id]=S.chats[y.id]||[]).push({from:"britney", t});
+    S.notifs.push({youth:y.id, t:`Britney: ${t}`, read:false}); render(); toast(`${y.name} krijgt een melding`); }
+});
+function toggleStep(gid,i){ const g=S.goals.find(g=>g.id===gid), s=g.steps[i]; s.d=!s.d; if(s.d){ addPoints(g.youth,10); toast("Stap gezet: +10 punten"); } }
+
+/* ---------- AI (via Claude, op het account van de kijker) ---------- */
+let samplePromise = window.claude?.use ? window.claude.use("sample") : Promise.resolve(null);
+const COACH_RULES = `Je bent de Chatcoach in de app Actievechange, voor jongeren van 12 tot 21 jaar (deze jongere: Sem, 16 jaar). Begeleider: Britney.
+Stijl: Nederlands, warm, kort (max 4 zinnen), op het niveau van de jongere, zonder oordeel. Luister eerst en vat samen wat je hoort. Vertel niet wat ze "moeten"; stel één vraag of stel één kleine haalbare stap voor die vandaag kan. Geen diagnoses, geen medisch advies.
+Als de jongere praat over zelfbeschadiging, zelfdoding, geweld, misbruik of direct gevaar: neem het serieus, zeg dat het goed is dat ze het vertellen, geef 112 (direct gevaar), 113 Zelfmoordpreventie 0800-0113 en De Kindertelefoon 0800-0432, en raad aan het nu ook met Britney of een volwassene te bespreken.
+Als iets beter persoonlijk kan, zeg dan dat ze het met Britney kunnen bespreken via de knop "Bespreek dit verder met Britney".`;
+function offlineReply(t){
+  const s=t.toLowerCase(), has=(...w)=>w.some(x=>s.includes(x));
+  if(has("dood","zelfmoord","suicid","zelfdoding","snijden","mezelf pijn","niet meer leven","slaan","misbruik"))
+    return "Wat goed dat je dit vertelt. Dit is te belangrijk om alleen mee te blijven zitten. Ben je in gevaar, bel dan 112. Je kunt ook gratis en anoniem praten met 113 (0800-0113) of De Kindertelefoon (0800-0432). Wil je dat Britney contact met je opneemt?";
+  if(has("solliciteer","solliciteren","bijbaan","werk","baan")) return "Solliciteren is best spannend, dat vinden veel mensen. Wat vind je het lastigste: binnenlopen, wat je moet zeggen, of bang zijn voor een nee? Een kleine stap kan zijn: schrijf één zin op die je wilt zeggen als je binnenloopt.";
+  if(has("thuis","ouders","moeder","vader","mama","papa","regels")) return "Het klinkt alsof het thuis botst. Dat is vervelend, zeker als je het gevoel hebt dat je niet gehoord wordt. Wat zou je het liefst tegen je ouders willen zeggen, als je wist dat ze echt zouden luisteren?";
+  if(has("school","mentor","huiswerk","toets","te laat")) return "School kan echt veel zijn. Wat speelt er het meest: het werk zelf, op tijd komen, of iets met mensen in de klas? Als we weten waar het zit, kunnen we één kleine stap voor morgen bedenken.";
+  if(has("boos","kwaad","ontplof")) return "Boos worden is niet fout, het zegt dat iets belangrijk voor je is. Wat gebeurde er vlak voordat je boos werd? Een stap die vaak helpt: 10 minuten naar buiten zonder telefoon, en daarna pas reageren.";
+  if(has("bang","eng","spannend","onzeker","durf")) return "Spannend is oké, het betekent dat je iets nieuws probeert. Wat is het kleinste stukje ervan dat je vandaag wel zou durven? Hoe kleiner, hoe beter.";
+  if(has("stress","druk","te veel","hoofd","moe")) return "Het klinkt alsof er veel in je hoofd zit. Probeer eens alles op te schrijven wat je bezighoudt, zonder het op te lossen. Welke van die dingen is vandaag het belangrijkste?";
+  if(has("vriend","vriendin","relatie","alleen","eenzaam","horen")) return "Ergens bij willen horen is heel normaal en soms best lastig. Met wie voel jij je het meest jezelf? Misschien kun je deze week één klein berichtje naar die persoon sturen.";
+  if(has("motivatie","zin","geen zin","lui")) return "Geen motivatie hebben overkomt iedereen. Je hoeft niet te wachten tot je zin hebt. Kies iets van 5 minuten en begin gewoon. Wat zou dat vandaag kunnen zijn?";
+  return "Dank je dat je dit deelt. Kun je iets meer vertellen over wat er speelt? Als je liever persoonlijk praat, tik dan op \"Bespreek dit verder met Britney\".";
+}
+async function askCoach(text){
+  S.chats.coach.push({from:"me", t:text}); S.thinking=true; render();
+  const sample = await samplePromise;
+  let reply;
+  if(!sample){ reply = offlineReply(text); }
+  else {
+    const turns=[]; S.chats.coach.slice(1).forEach(m=>turns.push({role:m.from==="me"?"user":"assistant", content:m.t}));
+    turns[0] = {role:"user", content: COACH_RULES + "\n\nBericht van Sem:\n" + turns[0].content};
+    // merge consecutive same-role turns
+    const merged=[]; turns.forEach(t=>{ const l=merged[merged.length-1]; if(l&&l.role===t.role) l.content+="\n"+t.content; else merged.push({...t}); });
+    try{
+      const r = await sample(merged, {modelTier:"quick", cache:false, onText:({text})=>{ const el=document.getElementById("stream"); if(el) el.textContent=text; }});
+      reply = r.text;
+    }catch(e){
+      reply = e.code==="not_granted" ? "De chatcoach mag niet antwoorden zolang Claude niet is toegestaan. Je kunt Britney wel een bericht sturen." :
+              e.code==="rate_limited" ? "Het is even druk. Probeer het over een minuut opnieuw, of stuur Britney een bericht." :
+              (e.text || "Er ging iets mis met de chatcoach. Probeer het opnieuw of stuur Britney een bericht.");
+    }
+  }
+  S.thinking=false; S.chats.coach.push({from:"them", t:reply}); if(S.chats.coach.length===3) addPoints(ME,5); render();
+}
+async function aiSteps(){
+  keepDraft(); const d=S.draft, y=Y(S.sel);
+  if(!d.title?.trim()){ toast("Vul eerst het doel in"); return; }
+  const sample = await samplePromise;
+  if(!sample){ S.draft.steps = "Dag 1: Schrijf op waarom dit doel belangrijk voor je is\nDag 2: Kies één klein ding dat je vandaag al kunt doen\nDag 3: Doe dat ene kleine ding\nDag 4: Vertel iemand wat je gedaan hebt\nDag 5: Kijk terug: wat ging goed, wat was lastig?"; render(); toast("Voorbeeldstappen ingevuld (in de volledige app maakt AI ze op maat)"); return; }
+  S.aiBusy=true; render();
+  try{
+    const r = await sample(`Je helpt jongerencoach Britney. Maak van dit persoonlijke doel 4 tot 6 kleine, concrete, haalbare stappen voor ${y.name} (${y.age} jaar), passend bij die leeftijd en zonder te hoge eisen. Elke stap kort, in jij-vorm, op één regel, beginnend met "Dag 1:", "Dag 2:" enz. Geef alleen de regels.\n\nDoel: ${d.title}\nUit het gesprek: ${d.why||"-"}`, {modelTier:"default"});
+    S.draft.steps = r.text.trim();
+  }catch(e){ toast(e.code==="not_granted"?"Claude is niet toegestaan voor deze pagina":"Stappen bedenken lukte niet, probeer het opnieuw"); }
+  S.aiBusy=false; render();
+}
+render();
+</script>
+</body>
+</html>
