@@ -3,6 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1c2140">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Actievechange">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Actievechange</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap">
@@ -77,6 +85,22 @@ textarea{resize:vertical;min-height:70px}
 .tabs button .ico{width:22px;height:22px}
 .step .mark{width:18px;height:18px;flex:none;margin-top:2px;color:var(--grow)}
 .step:not(.done) .mark{color:var(--muted)}
+.quick{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 18px 6px}
+.quick .sos-btn{margin:0}
+.quick button{border-radius:var(--r);padding:12px 14px;font-family:var(--f-display);font-weight:800;font-size:16px;display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left}
+.quick button small{font-family:var(--f-body);font-weight:500;font-size:12px;opacity:.9}
+.quick .chat-btn{background:var(--calm);color:var(--on-accent)}
+.quick .lbl{display:flex;align-items:center;gap:8px}
+.topright{display:flex;gap:8px;align-items:center}
+.bellbtn{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--surface-2);position:relative}
+.bellbtn .dot{top:-2px;right:-2px}
+.quote{background:var(--ink);color:var(--bg);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:8px}
+.quote p{font-family:var(--f-display);font-size:20px;font-weight:700;line-height:1.25;text-wrap:balance}
+.quote .eyebrow{color:var(--bg);opacity:.7}
+.quote .row button{color:var(--bg);opacity:.8;font-size:13px;text-decoration:underline}
+.notif.quoten{background:var(--surface-2)}
+.qitem{display:flex;gap:10px;align-items:flex-start;background:var(--surface-2);border-radius:12px;padding:10px 12px}
+.qitem .grow1{flex:1;min-width:0}
 .moods button[aria-pressed="true"]{border-color:var(--move);background:var(--move-soft)}
 .btn{background:var(--ink);color:var(--bg);border-radius:12px;padding:11px 16px;font-weight:700;text-align:center}
 .btn.alt{background:var(--surface);color:var(--ink);border:1.5px solid var(--line)}
@@ -172,7 +196,7 @@ textarea{resize:vertical;min-height:70px}
 <div class="toast" id="toast" hidden></div>
 
 <script>
-const KEY = "actievechange-demo-v1";
+const KEY = "actievechange-demo-v2";
 const DAYS = ["ma","di","wo","do","vr","za","zo"];
 const LEVELS = [["Start",0],["In beweging",60],["Groei",150],["Sterker",300],["Actievechange",500]];
 const HELP = `<div class="helpline"><b>Ben je in gevaar of denk je aan zelfdoding?</b>
@@ -212,7 +236,10 @@ function seed(){
       daan:[{from:"britney", t:"Hoe ging je gesprek bij het uitzendbureau?"},{from:"youth", t:"Goed! Volgende week mag ik beginnen"}]
     },
     stuck:[{youth:"noor", where:"School", what:"Ik kom steeds te laat en krijg straf", feel:"Boos", need:"Een plan", when:"gisteren 21:40", handled:false}],
-    notifs:[{youth:"sem", t:"Britney heeft een nieuw doel voor je klaargezet: Rustiger worden als het thuis botst", read:false}],
+    notifs:[{youth:"sem", t:"Britney heeft een nieuw doel voor je klaargezet: Rustiger worden als het thuis botst", read:false},
+      {youth:"sem", kind:"quote", t:"Kleine stappen zijn ook stappen. Je hoeft vandaag niet alles op te lossen.", read:false}],
+    quotes:["Kleine stappen zijn ook stappen. Je hoeft vandaag niet alles op te lossen.","Hulp vragen is niet zwak. Het is juist sterk.","Je hoeft het niet perfect te doen. Je hoeft het alleen te proberen.","Spannend betekent dat je groeit.","Elke dag is een nieuwe kans om opnieuw te beginnen.","Jij bepaalt je volgende stap, hoe klein ook."],
+    quoteFreq:"elke ochtend om 08:00",
     share:{sem:{goals:true, checkins:true, stuck:false}},
     parentWeek:{acts:3}
   };
@@ -236,7 +263,8 @@ const ICONS = {
   check:'<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',
   open:'<circle cx="12" cy="12" r="9"/>',
   buoy:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="m4.9 4.9 4.3 4.3M14.8 14.8l4.3 4.3M14.8 9.2l4.3-4.3M4.9 19.1l4.3-4.3"/>',
-  arrow:'<path d="M5 12h14M13 6l6 6-6 6"/>'
+  arrow:'<path d="M5 12h14M13 6l6 6-6 6"/>',
+  spark:'<path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8"/>'
 };
 const icon = (n, cls="") => `<svg class="ico ${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n]}</svg>`;
 const FACES = {
@@ -266,14 +294,15 @@ function now(){ const d=new Date(); return d.toLocaleTimeString("nl-NL",{hour:"2
 const ME = "sem";
 function youthApp(){
   const unread = S.notifs.filter(n=>n.youth===ME && !n.read).length;
+  const unreadAll = unread;
   const tabs=[["home","home","Home"],["doelen","target","Mijn doelen"],["challenges","flag","Challenges"],["groei","growth","Mijn groei"],["chat","chat","Chat"]];
   let body = "";
   if(S.tab==="vast") body = stuckFlow();
-  else body = ({home:youthHome, doelen:youthGoals, challenges:youthChallenges, groei:youthGrowth, chat:youthChat})[S.tab]();
-  return `<div class="top"><div><div class="eyebrow">Hoi Sem · 16 jaar</div><h2>${({home:"Hoe gaat het vandaag?",doelen:"Mijn doelen",challenges:"Challenges",groei:"Mijn groei",chat:"Chat",vast:"Ik zit vast"})[S.tab]}</h2></div><div class="avatar">S</div></div>
-  ${S.tab!=="vast" ? `<button class="sos-btn" data-act="vast"><span class="lbl">${icon("buoy")}Ik zit vast</span><small class="lbl">Hulp in 4 korte vragen ${icon("arrow")}</small></button>` : ""}
+  else body = ({home:youthHome, doelen:youthGoals, challenges:youthChallenges, groei:youthGrowth, chat:youthChat, meldingen:youthNotifs})[S.tab]();
+  return `<div class="top"><div><div class="eyebrow">Hoi Sem · 16 jaar</div><h2>${({home:"Hoe gaat het vandaag?",doelen:"Mijn doelen",challenges:"Challenges",groei:"Mijn groei",chat:"Chat",vast:"Ik zit vast",meldingen:"Mededelingen"})[S.tab]}</h2></div><div class="topright"><button class="bellbtn" data-act="tab" data-v="meldingen" aria-label="Mededelingen">${icon("bell")}${unreadAll?`<i class="dot">${unreadAll}</i>`:""}</button><div class="avatar">S</div></div></div>
+  ${S.tab!=="vast"&&S.tab!=="chat" ? `<div class="quick"><button class="sos-btn" data-act="vast"><span class="lbl">${icon("buoy")}Ik zit vast</span><small>Hulp in 4 korte vragen</small></button><button class="chat-btn" data-act="chatbritney"><span class="lbl">${icon("chat")}Chat met Britney</span><small>Je begeleider</small></button></div>` : ""}
   <div class="screen">${body}</div>
-  <nav class="tabs">${tabs.map(([k,ic,l])=>`<button data-act="tab" data-v="${k}" ${S.tab===k?'aria-current="page"':''}>${icon(ic)}${l}${k==="home"&&unread?`<i class="dot">${unread}</i>`:""}</button>`).join("")}</nav>`;
+  <nav class="tabs">${tabs.map(([k,ic,l])=>`<button data-act="tab" data-v="${k}" ${S.tab===k?'aria-current="page"':''}>${icon(ic)}${l}</button>`).join("")}</nav>`;
 }
 function youthHome(){
   const me=Y(ME);
@@ -283,7 +312,9 @@ function youthHome(){
   const moods=["Goed","Gaat wel","Niet zo goed","Boos","Gestrest"];
   const topics=["Mijn gedachten","Mijn gevoelens","Zelfvertrouwen","Vrienden","School","Thuis","Relatie","Boosheid","Stress","Motivatie","Werk / solliciteren","Iets anders"];
   return `
-  ${notifs.map((n,i)=>`<div class="notif"><span class="bell">${icon("bell")}</span><div class="grow1"><b>Nieuw van Britney</b><span class="small">${esc(n.t)}</span></div><button class="x" data-act="readnotif" data-v="${S.notifs.indexOf(n)}" aria-label="Gelezen">${icon("close")}</button></div>`).join("")}
+  ${notifs.filter(n=>n.kind==="quote").slice(-1).map(n=>`<div class="quote"><div class="eyebrow">Quote van Britney</div><p>${esc(n.t)}</p><div class="row"><button data-act="readnotif" data-v="${S.notifs.indexOf(n)}">Gelezen</button></div></div>`).join("")}
+  ${pushCard()}
+  ${notifs.filter(n=>n.kind!=="quote").map((n,i)=>`<div class="notif"><span class="bell">${icon("bell")}</span><div class="grow1"><b>Nieuw van Britney</b><span class="small">${esc(n.t)}</span></div><button class="x" data-act="readnotif" data-v="${S.notifs.indexOf(n)}" aria-label="Gelezen">${icon("close")}</button></div>`).join("")}
   ${next?`<div class="notif reminder"><span class="bell">${icon("clock")}</span><div class="grow1"><b>Herinnering (${esc(next.g.freq)})</b><span class="small">Vandaag een kleine stap voor "${esc(next.g.title)}": ${esc(next.s.t)}</span></div></div>`:""}
   <div class="card"><h3>Hoe gaat het vandaag?</h3>
     <div class="moods">${moods.map(l=>`<button data-act="mood" data-v="${l}" aria-pressed="${me.mood===l}">${face(l)}${l}</button>`).join("")}</div>
@@ -343,6 +374,24 @@ function youthChat(){
   ${m==="coach"&&S.chats.coach.length>2?`<button class="btn alt" data-act="handoff">Bespreek dit verder met Britney</button>`:""}
   ${m==="coach"?`<p class="small muted">De chatcoach is een AI. Hij geeft geen diagnose en vervangt Britney niet.</p>`:""}`;
 }
+function youthNotifs(){
+  const list=S.notifs.filter(n=>n.youth===ME).slice().reverse();
+  const html = list.map(n=>`<div class="notif ${n.kind==="quote"?"quoten":""}"><span class="bell">${icon(n.kind==="quote"?"spark":"bell")}</span><div class="grow1"><b>${n.kind==="quote"?"Quote van Britney":"Nieuw van Britney"}</b><span class="small">${esc(n.t)}</span></div></div>`).join("") || `<p class="muted">Nog geen mededelingen.</p>`;
+  return pushCard()+html;
+}
+function pushSupported(){ return "Notification" in window && "serviceWorker" in navigator; }
+function pushCard(){
+  if(!pushSupported() || Notification.permission!=="default") return "";
+  return `<div class="notif reminder"><span class="bell">${icon("bell")}</span><div class="grow1"><b>Zet meldingen aan</b><span class="small">Dan krijg je herinneringen en quotes van Britney als melding op je telefoon.</span><div style="margin-top:8px"><button class="btn move" data-act="enablepush">Meldingen aanzetten</button></div></div></div>`;
+}
+async function systemNotify(title, body){
+  try{
+    if(!pushSupported() || Notification.permission!=="granted") return false;
+    const reg = await navigator.serviceWorker.getRegistration();
+    if(reg){ await reg.showNotification(title,{body, icon:"icon-192.png", badge:"icon-192.png"}); return true; }
+    new Notification(title,{body}); return true;
+  }catch(e){ return false; }
+}
 function stuckFlow(){
   const f=S.flow||(S.flow={step:0});
   const dots=`<div class="progress-dots">${[0,1,2,3,4].map(i=>`<i class="${i<=f.step?"on":""}"></i>`).join("")}</div>`;
@@ -365,12 +414,12 @@ function stuckFlow(){
 /* ---------- Begeleider ---------- */
 function coachApp(){
   const open=S.stuck.filter(s=>!s.handled).length;
-  const subs=[["overzicht","Overzicht"],["doelen","Doelen"],["chats","Chats"],["meldingen",`Ik zit vast${open?` (${open})`:""}`]];
+  const subs=[["overzicht","Overzicht"],["doelen","Doelen"],["chats","Chats"],["meldingen",`Ik zit vast${open?` (${open})`:""}`],["quotes","Quotes"]];
   const y=Y(S.sel);
-  const body=({overzicht:coachOverview,doelen:coachGoals,chats:coachChats,meldingen:coachStuck})[S.btab]();
+  const body=({overzicht:coachOverview,doelen:coachGoals,chats:coachChats,meldingen:coachStuck,quotes:coachQuotes})[S.btab]();
   return `<div class="top"><div><div class="eyebrow">Begeleidersomgeving</div><h2>Hoi Britney</h2></div><div class="avatar" style="background:var(--move-soft);color:var(--move)">B</div></div>
   <div class="screen"><div class="subtabs">${subs.map(([k,l])=>`<button data-act="btab" data-v="${k}" ${S.btab===k?'aria-current="page"':''}>${l}</button>`).join("")}</div>
-  ${S.btab!=="overzicht"&&S.btab!=="meldingen"?`<div class="subtabs">${S.youth.map(x=>`<button data-act="sel" data-v="${x.id}" ${S.sel===x.id?'aria-current="page"':''}>${x.name} (${x.age})</button>`).join("")}</div>`:""}
+  ${S.btab!=="overzicht"&&S.btab!=="meldingen"&&S.btab!=="quotes"?`<div class="subtabs">${S.youth.map(x=>`<button data-act="sel" data-v="${x.id}" ${S.sel===x.id?'aria-current="page"':''}>${x.name} (${x.age})</button>`).join("")}</div>`:""}
   ${body}</div>`;
 }
 function coachOverview(){
@@ -400,6 +449,18 @@ function coachChats(){
   return `<div class="msgs" id="msgs">${list.map(x=>`<div class="msg ${x.from==="britney"?"me":"them"}">${x.from!=="britney"?`<span class="who">${y.name}</span>`:""}${esc(x.t)}</div>`).join("") || `<p class="muted small">Nog geen berichten met ${y.name}.</p>`}</div>
   <form class="composer" data-form="coachchat"><input id="coachin" autocomplete="off" placeholder="Bericht aan ${y.name}..."><button class="btn">Stuur</button></form>
   <p class="small muted">Tip: zet iets uit dit gesprek direct om in een doel via het tabblad Doelen.</p>`;
+}
+function coachQuotes(){
+  return `<p class="small muted">Motiverende berichten die als melding op de telefoon van je jongeren verschijnen.</p>
+  <div class="card"><h3>Nieuwe quote</h3>
+    <div class="field"><label for="qtext">Tekst</label><textarea id="qtext" placeholder="Bijv. Je bent verder dan je denkt.">${esc(S.qdraft||"")}</textarea></div>
+    <div class="field"><label for="qto">Naar</label><select id="qto"><option value="all">Al mijn jongeren</option>${S.youth.map(y=>`<option value="${y.id}">${y.name}</option>`).join("")}</select></div>
+    <div class="row"><button class="btn move grow1" data-act="sendquote">Nu als melding sturen</button><button class="btn alt" data-act="addquote">Bewaar in lijst</button></div>
+  </div>
+  <div class="card"><div class="row"><h3 class="grow1">Automatisch sturen</h3></div>
+    <div class="field"><label for="qfreq">Eén quote uit de lijst, willekeurig</label><select id="qfreq">${["elke ochtend om 08:00","3x per week om 16:00","elke maandag om 08:00","uit"].map(f=>`<option ${S.quoteFreq===f?"selected":""}>${f}</option>`).join("")}</select></div>
+    ${S.quotes.map((q,i)=>`<div class="qitem"><div class="grow1">${esc(q)}</div><button class="small" data-act="sendq" data-v="${i}" style="text-decoration:underline">Stuur nu</button></div>`).join("")}
+  </div>`;
 }
 function coachStuck(){
   const list=S.stuck.slice().reverse();
@@ -431,7 +492,8 @@ function render(){
   const m=document.getElementById("msgs"); if(m) m.scrollTop=m.scrollHeight;
   save();
 }
-function keepDraft(){ const t=document.getElementById("gtitle"); if(t) S.draft={title:t.value, why:gwhy.value, steps:gsteps.value, freq:gfreq.value}; }
+function keepQuote(){ const q=document.getElementById("qtext"); if(q) S.qdraft=q.value; const f=document.getElementById("qfreq"); if(f) S.quoteFreq=f.value; }
+function keepDraft(){ keepQuote(); const t=document.getElementById("gtitle"); if(t) S.draft={title:t.value, why:gwhy.value, steps:gsteps.value, freq:gfreq.value}; }
 
 document.addEventListener("click", e=>{
   const b=e.target.closest("[data-act]"); if(!b) return;
@@ -439,7 +501,14 @@ document.addEventListener("click", e=>{
   if(b.tagName==="INPUT") return; // checkboxes handled on change
   keepDraft();
   if(a==="role"){ S.role=v; }
-  else if(a==="tab"){ S.tab=v; }
+  else if(a==="tab"){ S.tab=v; if(v==="meldingen") S.notifs.forEach(n=>{ if(n.youth===ME) n.read=true; }); }
+  else if(a==="chatbritney"){ S.tab="chat"; S.chatMode="britney"; }
+  else if(a==="enablepush"){ Notification.requestPermission().then(p=>{ if(p==="granted"){ systemNotify("Actievechange","Meldingen staan aan. Je krijgt hier quotes en herinneringen van Britney."); toast("Meldingen staan aan"); } else toast("Meldingen staan uit. Je kunt dit later aanzetten in je instellingen."); render(); }); return; }
+  else if(a==="addquote"){ const t=(document.getElementById("qtext").value||"").trim(); if(!t){ toast("Typ eerst een quote"); return; } S.quotes.push(t); S.qdraft=""; toast("Quote bewaard in je lijst"); }
+  else if(a==="sendquote"||a==="sendq"){ const t = a==="sendq" ? S.quotes[+v] : (document.getElementById("qtext").value||"").trim(); if(!t){ toast("Typ eerst een quote"); return; }
+    const to = a==="sendq" ? "all" : document.getElementById("qto").value; const ids = to==="all" ? S.youth.map(y=>y.id) : [to];
+    ids.forEach(id=>S.notifs.push({youth:id, kind:"quote", t, read:false})); if(a==="sendquote") S.qdraft="";
+    systemNotify("Quote van Britney", t); toast(`Verstuurd naar ${to==="all"?"al je jongeren":Y(to).name}`); }
   else if(a==="btab"){ S.btab=v; }
   else if(a==="sel"){ S.sel=v; S.draft={}; }
   else if(a==="open"){ S.sel=v; S.btab="doelen"; S.draft={}; }
@@ -543,6 +612,9 @@ async function aiSteps(){
   S.aiBusy=false; render();
 }
 render();
+if("serviceWorker" in navigator && location.protocol==="https:" && !location.hostname.endsWith("claude.ai") && !window.claude){
+  navigator.serviceWorker.register("sw.js").catch(()=>{});
+}
 </script>
 </body>
 </html>
